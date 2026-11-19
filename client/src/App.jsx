@@ -18,6 +18,8 @@ function UploadPage() {
   const uploadFormRef = useRef(null);
   const [uploadStatus, setUploadStatus] = useState('idle');
   const [uploadNotice, setUploadNotice] = useState('');
+  const [uploadNoticeType, setUploadNoticeType] = useState('success');
+  const [nextTopic, setNextTopic] = useState(null);
   const [error, setError] = useState('');
   const [deletingFolderId, setDeletingFolderId] = useState('');
 
@@ -32,11 +34,16 @@ function UploadPage() {
     }
   }
 
+  function clearUploadNotice() {
+    setUploadNotice('');
+    setNextTopic(null);
+  }
+
   useEffect(() => { refreshFolders(); }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setUploadStatus('loading'); setError(''); setUploadNotice('');
+    setUploadStatus('loading'); setError(''); setUploadNotice(''); setNextTopic(null);
     try {
       const result = await createMaterial({
         title,
@@ -46,15 +53,21 @@ function UploadPage() {
         folderName: selectedFolderId ? undefined : folderName,
       });
       setSelectedFolderId(result.folderId);
-      setFolderName('');
-      setTitle('');
-      setText('');
-      setUploadFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
       setUploadStatus('success');
-      setUploadNotice(`Added ${result.topics.length} ${result.topics.length === 1 ? 'topic' : 'topics'} to the folder.`);
+      setNextTopic(result.topics[0] || null);
+      setUploadNoticeType(result.topics.length ? 'success' : 'warning');
+      setUploadNotice(result.topics.length
+        ? `Your ${result.topics.length === 1 ? 'topic is' : 'topics are'} ready.`
+        : 'Your material was saved, but no topics were found. Add clearer notes above and submit again; the revised material will be saved as another source in this folder.');
+      if (result.topics.length) {
+        setFolderName('');
+        setTitle('');
+        setText('');
+        setUploadFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
       await refreshFolders();
-    } catch (requestError) { setError(requestError.message); setUploadStatus('error'); }
+    } catch (requestError) { setNextTopic(null); setError(requestError.message); setUploadStatus('error'); }
   }
 
   async function handleDeleteFolder(folder) {
@@ -75,12 +88,15 @@ function UploadPage() {
 
   function handleAddToFolder(folderId) {
     setSelectedFolderId(folderId);
+    setNextTopic(null);
+    setUploadNoticeType('info');
     setUploadNotice('Choose or paste another source material to add to this folder.');
     uploadFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function handleFileChange(event) {
     const file = event.target.files?.[0] || null;
+    clearUploadNotice();
     setError('');
     if (file && file.size > 10 * 1024 * 1024) {
       setError('PDF files must be 10 MB or smaller.');
@@ -96,6 +112,7 @@ function UploadPage() {
   }
 
   function handleTextChange(value) {
+    clearUploadNotice();
     setText(value);
     if (value && uploadFile) {
       setUploadFile(null);
@@ -113,28 +130,34 @@ function UploadPage() {
     <section className="hero"><p className="eyebrow"><span className="status-dot" /> Learn by explaining</p><h1>Start with what<br />you’re learning.</h1><p className="intro">Paste your study material and get a clear set of topics to explain back from memory.</p></section>
     <form ref={uploadFormRef} className="input-card" onSubmit={handleSubmit}>
       <label htmlFor="material-title">Material name <span className="optional">Optional</span></label>
-      <input id="material-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="e.g. Introduction to cell biology" />
-      <label className="folder-label" htmlFor="folder-select">Save topics in</label>
-      <select id="folder-select" value={selectedFolderId} onChange={(event) => setSelectedFolderId(event.target.value)}>
+      <input id="material-title" value={title} onChange={(event) => { clearUploadNotice(); setTitle(event.target.value); }} maxLength={120} placeholder="e.g. Introduction to cell biology" />
+      <label className="folder-label" htmlFor="folder-select">Choose a study folder</label>
+      <select id="folder-select" value={selectedFolderId} onChange={(event) => { clearUploadNotice(); setSelectedFolderId(event.target.value); }}>
         <option value="">Create a new folder</option>
         {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
       </select>
-      {!selectedFolderId && <><label className="folder-label" htmlFor="folder-name">New folder name</label><input id="folder-name" value={folderName} onChange={(event) => setFolderName(event.target.value)} maxLength={120} required placeholder="e.g. AWS Cloud" /></>}
+      {!selectedFolderId && <><label className="folder-label" htmlFor="folder-name">New folder name</label><input id="folder-name" value={folderName} onChange={(event) => { clearUploadNotice(); setFolderName(event.target.value); }} maxLength={120} required placeholder="e.g. AWS Cloud" /></>}
+      <aside className="processing-note" aria-label="How your material is processed">
+        When you choose <strong>Generate topics</strong>, pasted text or readable PDF text is sent to Gemini to draft topics and a checklist. The original material and generated topics are saved in this app’s library, which is shared by people using this install. Use notes you’re comfortable sending for AI processing and saving here.
+      </aside>
       <div className="label-row"><label htmlFor="material-text">Study material</label><span className="counter">{text.length.toLocaleString()} / 50,000</span></div>
       <textarea id="material-text" value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={50000} placeholder="Paste a chapter, your notes, or any material you want to learn…" />
       <div className="upload-divider"><span>or upload a PDF</span></div>
       <label htmlFor="material-file">Text-based PDF <span className="optional">10 MB max</span></label>
       <input ref={fileInputRef} id="material-file" className="file-input" type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
       {uploadFile && <p className="selected-file">{uploadFile.name} · {(uploadFile.size / (1024 * 1024)).toFixed(1)} MB <button className="remove-file" type="button" onClick={clearUploadFile}>Remove</button></p>}
-      <div className="form-footer"><span className="privacy-note"><span aria-hidden="true">✳</span> Your checklist stays hidden while you explain.</span><button type="submit" disabled={uploadStatus === 'loading' || (!text.trim() && !uploadFile) || (!selectedFolderId && !folderName.trim())}>{uploadStatus === 'loading' ? (uploadFile ? 'Reading your PDF…' : 'Reading your material…') : 'Generate topics'}<span aria-hidden="true">↗</span></button></div>
+      <div className="form-footer"><span className="privacy-note"><span aria-hidden="true">✳</span> Your checklist stays hidden while you explain.</span><button type="submit" disabled={uploadStatus === 'loading' || (!text.trim() && !uploadFile) || (!selectedFolderId && !folderName.trim())}>{uploadStatus === 'loading' ? (uploadFile ? 'Reading your PDF…' : 'Reading your material…') : uploadStatus === 'error' ? 'Try again' : 'Generate topics'}<span aria-hidden="true">↗</span></button></div>
     </form>
     {uploadStatus === 'loading' && <p className="feedback loading" role="status">{uploadFile ? 'Reading your PDF, then organizing topics. Longer material can take a little more time…' : 'Reading your material and organizing the main ideas…'}</p>}
     {uploadStatus === 'error' && <p className="feedback error" role="alert">{error}</p>}
-    {uploadNotice && <p className="feedback success-feedback" role="status">{uploadNotice}</p>}
+    {uploadNotice && <section className={`upload-notice upload-notice-${uploadNoticeType}`}>
+      <p role="status" aria-live="polite">{uploadNotice}</p>
+      {nextTopic && <Link className="button-link" to={`/topics/${nextTopic.id}/explain`}>Start with “{nextTopic.title}” <span aria-hidden="true">→</span></Link>}
+    </section>}
     <section className="folders-section" aria-live="polite">
-      <div className="results-heading"><div><p className="eyebrow">Your library</p><h2>Study folders</h2></div></div>
+      <div className="results-heading"><div><p className="eyebrow">Your library</p><h2>Study folders</h2><p className="section-intro">Choose a topic to explain it from memory. Its checklist stays hidden until you submit.</p></div></div>
       {folderLoadStatus === 'loading' && <p className="feedback loading" role="status">Loading your folders…</p>}
-      {folderLoadStatus === 'error' && <p className="feedback error" role="alert">{folderError}</p>}
+      {folderLoadStatus === 'error' && <div className="folder-load-error"><p className="feedback error" role="alert">{folderError} You can retry loading folders or create a new folder above.</p><button className="secondary-button" type="button" onClick={refreshFolders}>Retry loading folders</button></div>}
       {folderError && folderLoadStatus !== 'error' && <p className="feedback error" role="alert">{folderError}</p>}
       {folderLoadStatus === 'success' && folders.length === 0 && <p className="empty-state">No folders yet. Add study material above to create your first folder.</p>}
       {folderLoadStatus === 'success' && folders.map((folder) => <details className="folder-card" key={folder.id}>
@@ -275,10 +298,10 @@ function ExplainPage() {
       <div className="voice-controls">{SpeechRecognition ? <><button className={`voice-button ${voiceState === 'listening' ? 'voice-active' : ''}`} type="button" onClick={toggleVoiceInput} disabled={status === 'grading'} aria-pressed={voiceState === 'listening'}>{voiceState === 'listening' ? '■ Stop voice input' : '🎙 Start voice input'}</button><span className="voice-caption">Optional · speech is added to your explanation</span></> : <span className="voice-caption">Voice input is not available in this browser. You can type your explanation.</span>}</div>
       {voiceState === 'listening' && <p className="voice-status" role="status">Listening… speak naturally, then select Stop voice input.{interimTranscript && <span className="interim-transcript"> {interimTranscript}</span>}</p>}
       {voiceError && <p className="feedback error voice-error" role="alert">{voiceError}</p>}
-      <div className="form-footer"><span className="privacy-note"><span aria-hidden="true">✳</span> Your checklist stays hidden until you submit.</span><button type="submit" disabled={status === 'grading' || voiceState === 'listening'}>{status === 'grading' ? 'Checking your explanation…' : 'Submit explanation'}<span aria-hidden="true">↗</span></button></div>
+      <div className="form-footer"><span className="privacy-note"><span aria-hidden="true">✳</span> The checklist appears after you submit.</span><button type="submit" disabled={status === 'grading' || voiceState === 'listening'}>{status === 'grading' ? 'Checking your explanation…' : 'Submit explanation'}<span aria-hidden="true">↗</span></button></div>
     </form>
     {status === 'grading' && <p className="feedback loading" role="status">Checking your explanation against the topic checklist…</p>}
-    {status === 'submit-error' && <p className="feedback error" role="alert">{error}</p>}
+    {status === 'submit-error' && <p className="feedback error" role="alert">{error} Your explanation is still here. Edit it if needed, then try again.</p>}
     <footer className="page-footer">A little understanding goes a long way.</footer>
   </main>;
 }
@@ -309,15 +332,16 @@ function ResultsPage() {
   if (!data) return <main className="page-shell"><p className="empty-state">No results are available for this attempt.</p><Link className="back-link" to="/">Back to topics</Link></main>;
 
   const { attempt, results, incorrectStatements } = data;
+  const reviewCount = results.filter((result) => result.status === 'missed' || result.status === 'partial').length;
   return <main className="page-shell">
     <header className="topbar"><Link className="brand" to="/">Explain It Back<span className="brand-dot">.</span></Link><span className="step-tag">STEP 03 / 07</span></header>
     <Link className="back-link" to="/">← Back to topics</Link>
-    <section className="results-hero"><p className="eyebrow"><span className="status-dot" /> Explanation complete</p><h1 className="results-title">Here’s what stuck.</h1><p className="intro">{attempt.topicTitle}</p><div className="score-card result-score"><div className="score-badge"><strong>{attempt.score}</strong><span>%</span></div><div><p className="eyebrow">Weighted score</p><p className="score-caption">Your score reflects the importance of each key idea.</p></div></div></section>
+    <section className="results-hero"><p className="eyebrow"><span className="status-dot" /> Explanation complete</p><h1 className="results-title">Here’s what stuck.</h1><p className="intro">{attempt.topicTitle}</p><div className="score-card result-score"><div className="score-badge"><strong>{attempt.score}</strong><span>%</span></div><div><p className="eyebrow">Weighted score</p><p className="score-caption">A weighted summary of the ideas you covered, partly covered, or missed.</p></div></div></section>
     <section className="checklist-section"><div className="results-heading"><div><p className="eyebrow">The checklist</p><h2>What you covered</h2></div></div>
       {results.length === 0 ? <p className="empty-state">No checklist results were saved for this attempt.</p> : <div className="checklist">{results.map((result) => <article className={`checklist-item status-${result.status}`} key={result.keyPointId}><span className="result-icon" role="img" aria-label={statusLabel(result.status)}>{statusIcon(result.status)}</span><div className="checklist-copy"><div className="checklist-meta"><span className="status-name">{statusLabel(result.status)}</span><span className="importance">Importance {result.importance}</span></div><h3>{result.text}</h3>{result.evidence ? <blockquote>“{result.evidence}”</blockquote> : <p className="no-evidence">No supporting detail in your explanation.</p>}</div></article>)}</div>}
     </section>
     <section className="incorrect-panel"><div className="incorrect-heading"><span aria-hidden="true">!</span><div><p className="eyebrow">Check your understanding</p><h2>Incorrect statements</h2></div></div>{incorrectStatements.length ? <ul>{incorrectStatements.map((statement, index) => <li key={`${index}-${statement.userSaid}`}><p className="incorrect-quote">“{statement.userSaid}”</p><p className="correction">{statement.correction}</p></li>)}</ul> : <p className="no-incorrect">No clearly incorrect statements were detected.</p>}</section>
-    <div className="results-actions"><Link className="button-link" to={`/attempts/${attempt.id}/study`}>Study missed points <span aria-hidden="true">↗</span></Link><Link className="text-link" to={`/topics/${attempt.topicId}/explain`}>Try again</Link><Link className="text-link" to={`/topics/${attempt.topicId}/progress`}>View progress</Link><Link className="text-link" to="/">Back to topics</Link></div>
+    <div className="results-actions">{reviewCount > 0 ? <Link className="button-link" to={`/attempts/${attempt.id}/study`}>Study {reviewCount} idea{reviewCount === 1 ? '' : 's'} to revisit <span aria-hidden="true">↗</span></Link> : <p className="all-covered-note">You covered every checklist idea. Re-explain to reinforce it or check your progress.</p>}<Link className="text-link" to={`/topics/${attempt.topicId}/explain`}>Try again</Link><Link className="text-link" to={`/topics/${attempt.topicId}/progress`}>View progress</Link><Link className="text-link" to="/">Back to topics</Link></div>
     <footer className="page-footer">A little understanding goes a long way.</footer>
   </main>;
 }

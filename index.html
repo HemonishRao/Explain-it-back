@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f7f6f2" />
+    <meta name="description" content="Learn by explaining what you remember. Turn study notes into topics, get thoughtful feedback, and revisit the ideas you missed." />
+    <title>Explain It Back — Learn by explaining</title>
+    <link rel="stylesheet" href="./site.css" />
+    <script src="./site.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Explain It Back home">Explain It Back<span>.</span></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
+        <a href="#preview">Preview</a>
+        <a href="#try-it">Try it locally</a>
+      </nav>
+      <a class="source-link" href="https://github.com/HemonishRao/Explain-it-back">View on GitHub <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main id="main">
+      <section class="hero section-wrap" id="top" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span> A learning tool for active recall</p>
+          <h1 id="hero-title">Learn it.<br />Explain it<br /><em>back.</em></h1>
+          <p class="hero-intro">Turn study notes into topics, explain them from memory, and see which ideas are ready to stick.</p>
+          <div class="hero-actions">
+            <a class="button button-dark" href="#preview">Explore the preview <span aria-hidden="true">↓</span></a>
+            <a class="quiet-link" href="#how-it-works">How it works <span aria-hidden="true">↘</span></a>
+          </div>
+          <ul class="hero-tags" aria-label="App highlights"><li>Thoughtful feedback</li><li>Recall first</li><li>Built for another try</li></ul>
+        </div>
+        <div class="preview-card" aria-label="Sample topic progress preview">
+          <div class="preview-topline"><span>EXAMPLE REVIEW</span><span class="preview-date">01 / 03</span></div>
+          <div class="preview-card-body">
+            <div class="score-orbit" aria-hidden="true"><span>82</span><small>%</small></div>
+            <div class="preview-summary"><p class="eyebrow">Process scheduling</p><h2>A strong start.</h2><p>You recalled the scheduler and dispatcher. One idea could use another pass.</p></div>
+          </div>
+          <div class="preview-meter" aria-hidden="true"><span></span></div>
+          <div class="preview-card-footer"><span><i class="status-dot covered-dot" aria-hidden="true"></i> 2 ideas covered</span><span><i class="status-dot partial-dot" aria-hidden="true"></i> 1 to revisit</span></div>
+          <p class="preview-caption">A sample score for the walkthrough below.</p>
+        </div>
+      </section>
+
+      <section class="work-section" id="how-it-works" aria-labelledby="how-title">
+        <div class="section-wrap">
+          <div class="section-heading">
+            <div><p class="eyebrow">A simple study loop</p><h2 id="how-title">Recall first.<br /><em>Then refine.</em></h2></div>
+            <p class="section-aside">Reading helps you recognize an idea. Explaining it helps you find out what you actually remember.</p>
+          </div>
+          <div class="steps-grid">
+            <article class="step-card"><span class="step-number">01</span><div class="step-icon icon-notes" aria-hidden="true"><span></span><span></span><span></span></div><h3>Start with your notes</h3><p>Paste study material or add a text-based PDF. Explain It Back organizes the main topics for you.</p></article>
+            <article class="step-card"><span class="step-number">02</span><div class="step-icon icon-recall" aria-hidden="true">↗</div><h3>Explain from memory</h3><p>Choose one topic and explain it in your own words. The checklist stays hidden until you submit.</p></article>
+            <article class="step-card"><span class="step-number">03</span><div class="step-icon icon-feedback" aria-hidden="true"><span>✓</span><span>↻</span></div><h3>Learn from the gaps</h3><p>Review what you covered, what needs more detail, and the ideas to revisit next time.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-section section-wrap" id="preview" aria-labelledby="preview-title">
+        <div class="preview-heading">
+          <div><p class="eyebrow">A small interactive walkthrough</p><h2 id="preview-title">From explanation<br />to <em>understanding.</em></h2></div>
+          <p>This sample shows the student experience. The full app uses your study notes and a server-side Gemini connection.</p>
+        </div>
+        <div class="walkthrough">
+          <div class="walkthrough-tabs" role="group" aria-label="Preview stages">
+            <button class="walkthrough-tab is-active" type="button" data-preview-tab="recall" aria-controls="recall-panel" aria-pressed="true"><span>01</span> Explain</button>
+            <button class="walkthrough-tab" type="button" data-preview-tab="feedback" aria-controls="feedback-panel" aria-pressed="false"><span>02</span> Feedback</button>
+          </div>
+          <div class="walkthrough-content">
+            <section class="walkthrough-panel" id="recall-panel" data-preview-panel="recall" aria-labelledby="recall-title">
+              <div class="panel-label"><span class="live-dot" aria-hidden="true"></span> BEFORE YOU SUBMIT</div>
+              <p class="topic-kicker">TOPIC 04</p><h3 id="recall-title">Process scheduling</h3>
+              <p class="topic-summary">How an operating system chooses the next process to use the CPU.</p>
+              <blockquote class="sample-answer">“The scheduler picks a ready process. The dispatcher gives it the CPU, and a context switch saves the old process state before loading the next one.”</blockquote>
+              <p class="hidden-note"><span aria-hidden="true">✳</span> Key ideas stay hidden while you explain.</p>
+              <button class="button button-dark reveal-button" type="button" data-show-feedback>See the sample feedback <span aria-hidden="true">→</span></button>
+            </section>
+            <section class="walkthrough-panel feedback-panel" id="feedback-panel" data-preview-panel="feedback" aria-labelledby="feedback-title" hidden>
+              <div class="panel-label"><span class="live-dot" aria-hidden="true"></span> AFTER YOU SUBMIT <span class="sample-label">SAMPLE</span></div>
+              <div class="feedback-score"><div><p class="topic-kicker">WEIGHTED SCORE</p><h3 id="feedback-title">82<span>%</span></h3></div><p>You explained the main roles clearly. Add what the saved process state contains to strengthen your answer.</p></div>
+              <ul class="feedback-list">
+                <li><span class="feedback-icon covered-icon" aria-hidden="true">✓</span><div><strong>Scheduler chooses from the ready queue</strong><small>Covered · “picks a ready process”</small></div></li>
+                <li><span class="feedback-icon partial-icon" aria-hidden="true">◐</span><div><strong>Context switch saves and restores process state</strong><small>Partial · Include the state that gets saved</small></div></li>
+                <li><span class="feedback-icon covered-icon" aria-hidden="true">✓</span><div><strong>Dispatcher hands control to the selected process</strong><small>Covered · “gives it the CPU”</small></div></li>
+              </ul>
+              <button class="quiet-link feedback-back" type="button" data-show-recall>← Back to the explanation</button>
+            </section>
+          </div>
+        </div>
+        <p class="walkthrough-note" role="status" aria-live="polite">This walkthrough uses sample content. It does not send anything to an AI service.</p>
+      </section>
+
+      <section class="features-section" aria-labelledby="features-title">
+        <div class="section-wrap features-layout">
+          <div class="features-lead"><p class="eyebrow">Built for understanding</p><h2 id="features-title">A better way to<br /><em>close the book.</em></h2><p>Small, focused practice sessions make it easier to spot what you know and where to spend your next few minutes.</p></div>
+          <div class="feature-list">
+            <article><span>01</span><div><h3>Fair, weighted scoring</h3><p>See a score based on the importance of each key idea. The app calculates it in code.</p></div></article>
+            <article><span>02</span><div><h3>Evidence that makes sense</h3><p>Compare your own words with each checklist item, plus clear flags for incorrect statements.</p></div></article>
+            <article><span>03</span><div><h3>Useful review aids</h3><p>Get keywords and flip-through flashcards for missed or incomplete ideas.</p></div></article>
+            <article><span>04</span><div><h3>Progress you can see</h3><p>Re-explain topics and follow your scores across attempts.</p></div></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="try-section section-wrap" id="try-it" aria-labelledby="try-title">
+        <div class="try-panel">
+          <div class="try-copy"><p class="eyebrow">Want to use your own notes?</p><h2 id="try-title">Make it yours.</h2><p>Run the full app on your computer with your own Gemini API key. Your key stays on the server.</p><a class="button button-light" href="https://github.com/HemonishRao/Explain-it-back#local-setup">See setup instructions <span aria-hidden="true">↗</span></a></div>
+          <div class="try-code" aria-label="Quick start commands"><p>QUICK START</p><pre><code>npm install
+npm run dev</code></pre><span>Node.js 20+ · Gemini API key required</span></div>
+        </div>
+        <p class="privacy-footnote">Study materials and explanations are sent to Gemini through the server you configure. This GitHub Pages preview is static and has no shared AI key or saved study library.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="wordmark" href="#top">Explain It Back<span>.</span></a>
+      <p>Understand a little more, one explanation at a time.</p>
+      <a href="https://hemonishrao.github.io/">Back to Hemonish’s portfolio <span aria-hidden="true">↗</span></a>
+      <small>© 2026 Hemonish Rao</small>
+    </footer>
+  </body>
+</html>

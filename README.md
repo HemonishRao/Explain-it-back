@@ -4,7 +4,7 @@
 
 ![Explain It Back home page](docs/screenshots/home.png)
 
-**Live demo:** Not deployed yet. Add a verified demo URL here when one is available.
+**Project page:** [Explore the interactive project preview](https://hemonishrao.github.io/Explain-it-back/). The GitHub Pages site is a static showcase; the full AI-powered app requires a local server and your own Gemini API key.
 
 ## What the app does
 

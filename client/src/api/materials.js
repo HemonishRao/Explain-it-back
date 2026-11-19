@@ -1,4 +1,4 @@
-const apiUrl = import.meta.env.VITE_API_URL || '';
+const apiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 const studyRequestsByAttempt = new Map();
 
 export async function createMaterial({ title, text, file, folderId, folderName }) {

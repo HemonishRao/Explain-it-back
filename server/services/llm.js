@@ -113,10 +113,10 @@ export async function callLlm({ system, user, temperature = 0.2 }) {
     }
   }
 
-  // Log details on the server only. Never send raw LLM errors to the client.
-  console.error('[llm] request failed:', lastError?.message);
-
   const status = Number(lastError?.status ?? lastError?.code);
+  // Log only the status so provider errors cannot echo credentials or user text.
+  console.error(Number.isFinite(status) ? `[llm] request failed (status ${status})` : '[llm] request failed');
+
   if (status === 429) {
     const message = isDailyQuotaError(lastError)
       ? 'Gemini daily free-tier request limit reached. Check your AI Studio quota or retry after the reset.'

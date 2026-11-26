@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import PageShell from '../components/PageShell.jsx';
 import { getTopicAttempts } from '../api/materials.js';
 
 export default function ProgressPage() {
@@ -11,6 +12,9 @@ export default function ProgressPage() {
 
   useEffect(() => {
     let active = true;
+    setStatus('loading');
+    setError('');
+    setData(null);
     getTopicAttempts(id).then((result) => { if (active) { setData(result); setStatus('success'); } })
       .catch((requestError) => { if (active) { setError(requestError.message); setStatus('error'); } });
     return () => { active = false; };
@@ -29,8 +33,7 @@ export default function ProgressPage() {
     dateLabel: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(`${attempt.createdAt.replace(' ', 'T')}Z`)),
   }));
 
-  return <main className="page-shell">
-    <header className="topbar"><Link className="brand" to="/">Explain It Back<span className="brand-dot">.</span></Link><span className="step-tag">STEP 05 / 07</span></header>
+  return <PageShell step="STEP 05 / 05">
     <Link className="back-link" to={`/topics/${topic.id}/explain`}>← Explain this topic</Link>
     <section className="hero"><p className="eyebrow"><span className="status-dot" /> Your learning over time</p><h1 className="results-title">Progress.</h1><p className="intro">{topic.title}</p></section>
     {!attempts.length ? <section className="empty-state progress-empty"><h2>No attempts yet</h2><p>Explain this topic to start tracking your scores.</p><Link className="button-link" to={`/topics/${topic.id}/explain`}>Start an explanation <span aria-hidden="true">↗</span></Link></section> : <>
@@ -45,12 +48,11 @@ export default function ProgressPage() {
           <CartesianGrid stroke="#e7ece4" strokeDasharray="4 4" vertical={false} />
           <XAxis dataKey="attemptLabel" tick={{ fill: '#748278', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#dce4da' }} />
           <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: '#748278', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(score) => `${score}%`} />
-          <Tooltip formatter={(score) => [`${score}%`, 'Score']} labelFormatter={(_label, payload) => payload?.[0]?.payload?.dateLabel || ''} contentStyle={{ border: '1px solid #e3e9e0', borderRadius: 10, color: '#263a2d' }} />
+          <Tooltip formatter={(score) => [`${score}%`, 'Score']} labelFormatter={(_label, payload) => { const item = payload?.[0]?.payload; return item ? `${item.attemptLabel} · ${item.dateLabel}` : ''; }} contentStyle={{ border: '1px solid #e3e9e0', borderRadius: 10, color: '#263a2d' }} />
           <Line type="monotone" dataKey="score" stroke="#34734a" strokeWidth={3} dot={{ r: 5, fill: '#34734a', stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 7 }} />
         </LineChart></ResponsiveContainer></div>
       </section>
       <section className="attempt-history"><div className="results-heading"><div><p className="eyebrow">History</p><h2>Past attempts</h2></div></div><ol>{chartData.slice().reverse().map((attempt) => <li key={attempt.id}><div><strong>{attempt.attemptLabel}</strong><span>{attempt.dateLabel}</span></div><strong className="history-score">{attempt.score}%</strong><Link to={`/attempts/${attempt.id}/results`} aria-label={`View results for ${attempt.attemptLabel}`}>View results →</Link></li>)}</ol></section>
     </>}
-    <footer className="page-footer">A little understanding goes a long way.</footer>
-  </main>;
+  </PageShell>;
 }

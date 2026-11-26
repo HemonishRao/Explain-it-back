@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 process.env.DATABASE_PATH = ':memory:';
-const { deleteFolder, getAttemptDetails, getFoldersWithTopics, getStudyItems, getTopicAttemptHistory, getTopicForExplain, getTopicKeyPoints, getTopicsForMaterial, getWeakPointsForAttempt, materialExists, saveAttempt, saveMaterial, saveStudyItems } = await import('../server/db.js');
+const { deleteFolder, deleteMaterial, getAttemptDetails, getFoldersWithTopics, getStudyItems, getTopicAttemptHistory, getTopicForExplain, getTopicKeyPoints, getTopicsForMaterial, getWeakPointsForAttempt, materialExists, saveAttempt, saveMaterial, saveStudyItems } = await import('../server/db.js');
 
 test('stores materials, topics, and key points without exposing key points in topic summaries', () => {
   saveMaterial({
@@ -12,7 +12,13 @@ test('stores materials, topics, and key points without exposing key points in to
     topics: [{ id: 't-test', title: 'Test topic', summary: 'A short summary.', keyPoints: [{ id: 'k-test', text: 'A checklist idea.', importance: 3 }] }],
   });
   assert.equal(materialExists('m-test'), true);
-  assert.deepEqual(getTopicsForMaterial('m-test'), [{ id: 't-test', title: 'Test topic', summary: 'A short summary.' }]);
+  assert.deepEqual(getTopicsForMaterial('m-test'), [{
+    id: 't-test',
+    title: 'Test topic',
+    summary: 'A short summary.',
+    latestScore: null,
+    attemptCount: 0,
+  }]);
   assert.equal(getTopicForExplain('t-test').summary, 'A short summary.');
   assert.deepEqual(getTopicKeyPoints('t-test'), [{ id: 'k-test', text: 'A checklist idea.', importance: 3 }]);
   assert.equal(materialExists('missing'), false);
@@ -116,4 +122,62 @@ test('returns a topic’s attempts in chronological order and handles topics wit
   ]);
   assert.deepEqual(getTopicAttemptHistory('missing'), null);
   assert.deepEqual(getTopicAttemptHistory('t-test').attempts, history.attempts);
+});
+
+test('reports latestScore and attemptCount in topic listings and folders', () => {
+  const folderId = saveMaterial({
+    id: 'm-score-check',
+    title: 'Score material',
+    folderName: 'Score folder',
+    text: 'Notes',
+    topics: [{ id: 't-score-check', title: 'Score topic', summary: 'Summary.', keyPoints: [{ id: 'k-score-check', text: 'Point.', importance: 3 }] }],
+  });
+  saveAttempt({
+    id: 'a-score-1', topicId: 't-score-check', answerText: 'First', score: 45,
+    results: [{ id: 'r-score-1', keyPointId: 'k-score-check', status: 'partial', evidence: 'First' }], incorrectStatements: [],
+  });
+  saveAttempt({
+    id: 'a-score-2', topicId: 't-score-check', answerText: 'Second', score: 85,
+    results: [{ id: 'r-score-2', keyPointId: 'k-score-check', status: 'covered', evidence: 'Second' }], incorrectStatements: [],
+  });
+
+  const materialTopics = getTopicsForMaterial('m-score-check');
+  assert.equal(materialTopics[0].latestScore, 85);
+  assert.equal(materialTopics[0].attemptCount, 2);
+
+  const folder = getFoldersWithTopics().find((item) => item.id === folderId);
+  assert.equal(folder.materials[0].topics[0].latestScore, 85);
+  assert.equal(folder.materials[0].topics[0].attemptCount, 2);
+});
+
+test('deleteMaterial removes one material and its attempts while keeping sibling materials', () => {
+  const folderId = saveMaterial({
+    id: 'm-keep',
+    title: 'Keep source',
+    folderName: 'Shared folder',
+    text: 'Keep text',
+    topics: [{ id: 't-keep', title: 'Keep topic', summary: 'Keep summary.', keyPoints: [{ id: 'k-keep', text: 'Keep point.', importance: 2 }] }],
+  });
+  saveMaterial({
+    id: 'm-drop',
+    title: 'Drop source',
+    folderId,
+    text: 'Drop text',
+    topics: [{ id: 't-drop', title: 'Drop topic', summary: 'Drop summary.', keyPoints: [{ id: 'k-drop', text: 'Drop point.', importance: 3 }] }],
+  });
+  saveAttempt({
+    id: 'a-drop', topicId: 't-drop', answerText: 'Drop answer', score: 50,
+    results: [{ id: 'r-drop', keyPointId: 'k-drop', status: 'partial', evidence: 'Drop answer' }], incorrectStatements: [],
+  });
+
+  assert.equal(deleteMaterial('m-drop'), true);
+  assert.equal(deleteMaterial('m-drop'), false);
+  assert.equal(materialExists('m-drop'), false);
+  assert.equal(materialExists('m-keep'), true);
+  assert.equal(getAttemptDetails('a-drop'), null);
+
+  const folder = getFoldersWithTopics().find((item) => item.id === folderId);
+  assert.equal(folder.materialCount, 1);
+  assert.equal(folder.topicCount, 1);
+  assert.equal(folder.materials[0].id, 'm-keep');
 });

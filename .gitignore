@@ -38,6 +38,7 @@ secrets.*
 server/uploads/
 uploads/
 private-data/
+md-file/
 
 # Logs and local runtime artifacts
 npm-debug.log*

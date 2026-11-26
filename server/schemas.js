@@ -48,6 +48,14 @@ export const gradingResponseSchema = z.object({
   }).strict()).max(5),
 }).strict();
 
+export const hintRequestSchema = z.object({
+  explanationSoFar: z.string().max(5_000, 'Explanation must be 5,000 characters or fewer.').optional().default(''),
+});
+
+export const hintResponseSchema = z.object({
+  hint: z.string().trim().min(1).max(80),
+}).strict();
+
 export const remediationResponseSchema = z.object({
   items: z.array(z.object({
     keyPointId: z.string().min(1),

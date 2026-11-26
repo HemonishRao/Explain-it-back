@@ -70,3 +70,13 @@ test('extracts long material in chunks, merges once at temperature zero, and ass
   assert.notEqual(topics[0].id, 't1');
   assert.notEqual(topics[0].keyPoints[0].id, 'k1');
 });
+
+test('skips merge prompt when chunked extraction produces zero topics', async () => {
+  let mergeCalled = false;
+  const topics = await extractTopics(`${'A study paragraph about scheduling. '.repeat(180)}`, async (input) => {
+    if (input.system.includes('cleaning up a list')) mergeCalled = true;
+    return JSON.stringify({ topics: [] });
+  });
+  assert.equal(mergeCalled, false);
+  assert.deepEqual(topics, []);
+});

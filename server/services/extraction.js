@@ -5,6 +5,23 @@ import { callLlm } from './llm.js';
 import { parseLlmJson } from './llm-json.js';
 import { splitMaterialIntoChunks } from './chunking.js';
 
+function assignStoredIds(topics) {
+  return topics.map((topic) => ({
+    ...topic,
+    id: randomUUID(),
+    keyPoints: topic.keyPoints.map((point) => ({ ...point, id: randomUUID() })),
+  }));
+}
+
+function renumberTopicsForMerge(topics) {
+  let nextPointIndex = 1;
+  return topics.map((topic, topicIndex) => ({
+    ...topic,
+    id: `t${topicIndex + 1}`,
+    keyPoints: topic.keyPoints.map((point) => ({ ...point, id: `k${nextPointIndex++}` })),
+  }));
+}
+
 async function extractTopicsFromChunk(materialText, llmCall) {
   let lastValidationError;
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -14,8 +31,7 @@ async function extractTopicsFromChunk(materialText, llmCall) {
       temperature: LLM_SETTINGS.extraction.temperature,
     });
     try {
-      const parsed = topicExtractionSchema.parse(parseLlmJson(output));
-      return parsed.topics.map((topic) => ({ ...topic, id: randomUUID(), keyPoints: topic.keyPoints.map((point) => ({ ...point, id: randomUUID() })) }));
+      return topicExtractionSchema.parse(parseLlmJson(output)).topics;
     } catch (error) { lastValidationError = error; }
   }
   const error = new Error('The AI returned topics in an unexpected format. Please try again.');
@@ -25,20 +41,16 @@ async function extractTopicsFromChunk(materialText, llmCall) {
 }
 
 async function mergeExtractedTopics(topics, llmCall) {
+  const normalizedTopics = renumberTopicsForMerge(topics);
   let lastValidationError;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const output = await llmCall({
       system: TOPIC_MERGE_SYSTEM,
-      user: buildTopicMergeUser(topics),
+      user: buildTopicMergeUser(normalizedTopics),
       temperature: LLM_SETTINGS.merge.temperature,
     });
     try {
-      const parsed = topicExtractionSchema.parse(parseLlmJson(output));
-      return parsed.topics.map((topic) => ({
-        ...topic,
-        id: randomUUID(),
-        keyPoints: topic.keyPoints.map((point) => ({ ...point, id: randomUUID() })),
-      }));
+      return topicExtractionSchema.parse(parseLlmJson(output)).topics;
     } catch (error) { lastValidationError = error; }
   }
   const error = new Error('The AI could not combine topics from this long material. Please try again.');
@@ -48,9 +60,12 @@ async function mergeExtractedTopics(topics, llmCall) {
 }
 
 export async function extractTopics(materialText, llmCall = callLlm) {
-  if (materialText.length < 4_000) return extractTopicsFromChunk(materialText, llmCall);
+  if (materialText.length < 4_000) {
+    return assignStoredIds(await extractTopicsFromChunk(materialText, llmCall));
+  }
   const chunks = splitMaterialIntoChunks(materialText);
   const extractedTopics = [];
   for (const chunk of chunks) extractedTopics.push(...await extractTopicsFromChunk(chunk, llmCall));
-  return mergeExtractedTopics(extractedTopics, llmCall);
+  if (extractedTopics.length <= 1) return assignStoredIds(extractedTopics);
+  return assignStoredIds(await mergeExtractedTopics(extractedTopics, llmCall));
 }

@@ -62,7 +62,9 @@ export function getFoldersWithTopics() {
   const rows = db.prepare(`
     SELECT folders.id AS folderId, folders.name AS folderName, folders.created_at AS folderCreatedAt,
       materials.id AS materialId, materials.title AS materialTitle, materials.created_at AS materialCreatedAt,
-      topics.id AS topicId, topics.title AS topicTitle, topics.summary AS topicSummary
+      topics.id AS topicId, topics.title AS topicTitle, topics.summary AS topicSummary,
+      (SELECT score FROM attempts WHERE attempts.topic_id = topics.id ORDER BY attempts.created_at DESC, attempts.rowid DESC LIMIT 1) AS latestScore,
+      (SELECT COUNT(*) FROM attempts WHERE attempts.topic_id = topics.id) AS attemptCount
     FROM folders
     LEFT JOIN materials ON materials.folder_id = folders.id
     LEFT JOIN topics ON topics.material_id = materials.id
@@ -89,7 +91,13 @@ export function getFoldersWithTopics() {
       folder.materialCount += 1;
     }
     if (row.topicId) {
-      material.topics.push({ id: row.topicId, title: row.topicTitle, summary: row.topicSummary });
+      material.topics.push({
+        id: row.topicId,
+        title: row.topicTitle,
+        summary: row.topicSummary,
+        latestScore: row.latestScore ?? null,
+        attemptCount: row.attemptCount ?? 0,
+      });
       folder.topicCount += 1;
     }
   }
@@ -113,8 +121,27 @@ export function deleteFolder(folderId) {
   })();
 }
 
+export function deleteMaterial(materialId) {
+  return db.transaction(() => {
+    if (!materialExists(materialId)) return false;
+    db.prepare(`
+      DELETE FROM attempts
+      WHERE topic_id IN (SELECT id FROM topics WHERE material_id = ?)
+    `).run(materialId);
+    db.prepare('DELETE FROM materials WHERE id = ?').run(materialId);
+    return true;
+  })();
+}
+
 export function getTopicsForMaterial(materialId) {
-  return db.prepare('SELECT id, title, summary FROM topics WHERE material_id = ? ORDER BY rowid').all(materialId);
+  return db.prepare(`
+    SELECT topics.id, topics.title, topics.summary,
+      (SELECT score FROM attempts WHERE attempts.topic_id = topics.id ORDER BY attempts.created_at DESC, attempts.rowid DESC LIMIT 1) AS latestScore,
+      (SELECT COUNT(*) FROM attempts WHERE attempts.topic_id = topics.id) AS attemptCount
+    FROM topics
+    WHERE topics.material_id = ?
+    ORDER BY topics.rowid
+  `).all(materialId);
 }
 
 export function materialExists(materialId) {

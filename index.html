@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f7f6f2" />
     <meta name="description" content="Learn by explaining what you remember. Turn study notes into topics, get thoughtful feedback, and revisit the ideas you missed." />
+    <link rel="icon" type="image/svg+xml" href="./client/public/favicon.svg" />
     <title>Explain It Back — Learn by explaining</title>
     <link rel="stylesheet" href="./site.css" />
     <script src="./site.js" defer></script>
@@ -52,8 +53,8 @@
             <p class="section-aside">Reading helps you recognize an idea. Explaining it helps you find out what you actually remember.</p>
           </div>
           <div class="steps-grid">
-            <article class="step-card"><span class="step-number">01</span><div class="step-icon icon-notes" aria-hidden="true"><span></span><span></span><span></span></div><h3>Start with your notes</h3><p>Paste study material or add a text-based PDF. Explain It Back organizes the main topics for you.</p></article>
-            <article class="step-card"><span class="step-number">02</span><div class="step-icon icon-recall" aria-hidden="true">↗</div><h3>Explain from memory</h3><p>Choose one topic and explain it in your own words. The checklist stays hidden until you submit.</p></article>
+            <article class="step-card"><span class="step-number">01</span><div class="step-icon icon-notes" aria-hidden="true"><span></span><span></span><span></span></div><h3>Start with your notes</h3><p>Paste study notes or upload a text-based PDF or .txt file. Explain It Back organizes the main topics into study folders.</p></article>
+            <article class="step-card"><span class="step-number">02</span><div class="step-icon icon-recall" aria-hidden="true">↗</div><h3>Explain from memory</h3><p>Choose a topic and explain it by typing or voice. The checklist stays hidden until you submit—with optional hints if you get stuck.</p></article>
             <article class="step-card"><span class="step-number">03</span><div class="step-icon icon-feedback" aria-hidden="true"><span>✓</span><span>↻</span></div><h3>Learn from the gaps</h3><p>Review what you covered, what needs more detail, and the ideas to revisit next time.</p></article>
           </div>
         </div>
@@ -99,17 +100,18 @@
           <div class="feature-list">
             <article><span>01</span><div><h3>Fair, weighted scoring</h3><p>See a score based on the importance of each key idea. The app calculates it in code.</p></div></article>
             <article><span>02</span><div><h3>Evidence that makes sense</h3><p>Compare your own words with each checklist item, plus clear flags for incorrect statements.</p></div></article>
-            <article><span>03</span><div><h3>Useful review aids</h3><p>Get keywords and flip-through flashcards for missed or incomplete ideas.</p></div></article>
-            <article><span>04</span><div><h3>Progress you can see</h3><p>Re-explain topics and follow your scores across attempts.</p></div></article>
+            <article><span>03</span><div><h3>Useful review aids</h3><p>Get keywords and flip-through flashcards with Got it / Review again self-checks for missed or incomplete ideas.</p></div></article>
+            <article><span>04</span><div><h3>Progress you can see</h3><p>Track latest scores across folders and all topics, and follow your score chart across attempts.</p></div></article>
           </div>
         </div>
       </section>
 
       <section class="try-section section-wrap" id="try-it" aria-labelledby="try-title">
         <div class="try-panel">
-          <div class="try-copy"><p class="eyebrow">Want to use your own notes?</p><h2 id="try-title">Make it yours.</h2><p>Run the full app on your computer with your own Gemini API key. Your key stays on the server.</p><a class="button button-light" href="https://github.com/HemonishRao/Explain-it-back#local-setup">See setup instructions <span aria-hidden="true">↗</span></a></div>
+          <div class="try-copy"><p class="eyebrow">Want to use your own notes?</p><h2 id="try-title">Make it yours.</h2><p>Run the full app on your computer with your own Gemini API key. Your key stays on the server.</p><a class="button button-light" href="https://github.com/HemonishRao/Explain-it-back#quick-start-local-setup">See setup instructions <span aria-hidden="true">↗</span></a></div>
           <div class="try-code" aria-label="Quick start commands"><p>QUICK START</p><pre><code>npm install
-npm run dev</code></pre><span>Node.js 20+ · Gemini API key required</span></div>
+cp server/.env.example server/.env
+npm run dev</code></pre><span>Node.js 20+ · Add your Gemini API key in server/.env</span></div>
         </div>
         <p class="privacy-footnote">Study materials and explanations are sent to Gemini through the server you configure. This GitHub Pages preview is static and has no shared AI key or saved study library.</p>
       </section>
